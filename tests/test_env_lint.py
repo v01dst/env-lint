@@ -127,3 +127,33 @@ class BooleanValueTests(unittest.TestCase):
     def test_common_boolean_values_not_flagged(self):
         r = lint_env("DEBUG=true\nVERBOSE=false\nCACHE=yes\n")
         self.assertFalse(any(i.rule == "suspicious-value" for i in r.issues))
+
+class JsonOutputTests(unittest.TestCase):
+    def test_json_output_shape(self):
+        import io, contextlib, json, tempfile, os
+        from env_lint.__main__ import main
+        d = tempfile.mkdtemp()
+        bad = os.path.join(d, "bad.env")
+        with open(bad, "w") as f:
+            f.write("OOPS\nPORT=1\nPORT=2\n")
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            code = main([bad, "--json"])
+        self.assertEqual(code, 1)
+        data = json.loads(buf.getvalue())
+        self.assertEqual(data["errors"], 2)
+        self.assertEqual(data["vars"], 2)
+        self.assertTrue(any(i["rule"] == "duplicate-key" for i in data["issues"]))
+
+    def test_json_clean_exit(self):
+        import io, contextlib, json, tempfile, os
+        from env_lint.__main__ import main
+        d = tempfile.mkdtemp()
+        good = os.path.join(d, "good.env")
+        with open(good, "w") as f:
+            f.write("A=1\nB=hello\n")
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            code = main([good, "--json"])
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(buf.getvalue())["issues"], [])

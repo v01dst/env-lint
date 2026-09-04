@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import sys
@@ -177,6 +178,7 @@ def main(argv: list[str] | None = None) -> int:
     path = ".env"
     example: str | None = None
     strict = False
+    as_json = False
 
     i = 0
     while i < len(args):
@@ -193,6 +195,10 @@ def main(argv: list[str] | None = None) -> int:
             strict = True
             i += 1
             continue
+        if a == "--json":
+            as_json = True
+            i += 1
+            continue
         if a in ("-h", "--help"):
             print("env-lint [-f FILE] [-e EXAMPLE] [--strict] — validate .env files")
             return 0
@@ -200,6 +206,23 @@ def main(argv: list[str] | None = None) -> int:
         i += 1
 
     result = lint_file(path, example)
+    if as_json:
+        print(
+            json.dumps(
+                {
+                    "file": path,
+                    "vars": len(result.vars_seen),
+                    "errors": result.errors,
+                    "warnings": result.warnings,
+                    "issues": [
+                        {"line": i.line, "severity": i.severity, "rule": i.rule, "message": i.message}
+                        for i in result.issues
+                    ],
+                },
+                indent=2,
+            )
+        )
+        return 1 if result.errors or (strict and result.warnings) else 0
     for issue in result.issues:
         print(issue.format(path))
     if not result.issues:
