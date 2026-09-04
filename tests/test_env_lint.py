@@ -97,7 +97,7 @@ class CliTests(unittest.TestCase):
 
         good = os.path.join(d, "good.env")
         with open(good, "w") as f:
-            f.write("A=1\nB=hello\n")
+            f.write("A=1\nB=x9y\n")
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
             code = main([good])
@@ -135,7 +135,7 @@ class JsonOutputTests(unittest.TestCase):
         d = tempfile.mkdtemp()
         bad = os.path.join(d, "bad.env")
         with open(bad, "w") as f:
-            f.write("OOPS\nPORT=1\nPORT=2\n")
+            f.write("OOPS\nPORT=1\nPORT=2\nHOST=db\n")
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
             code = main([bad, "--json"])
@@ -151,7 +151,7 @@ class JsonOutputTests(unittest.TestCase):
         d = tempfile.mkdtemp()
         good = os.path.join(d, "good.env")
         with open(good, "w") as f:
-            f.write("A=1\nB=hello\n")
+            f.write("A=1\nB=x9y\n")
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
             code = main([good, "--json"])
